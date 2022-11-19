@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../widgets.dart';
+import 'widgets/styled_button.dart';
 
 class AuthFunc extends StatelessWidget {
   const AuthFunc({

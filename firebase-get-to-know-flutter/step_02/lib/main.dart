@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +7,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'src/screens/authentication.dart';
+import 'src/screens/guest_book.dart';
+import 'src/screens/widgets/header.dart';
+import 'src/screens/widgets/icon_and_detail.dart';
+import 'src/screens/widgets/paragraph.dart';
+import 'src/screens/yes_no_selection.dart';
 import 'src/state/application_state.dart';
-import 'src/widgets.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +56,11 @@ class App extends StatelessWidget {
                             'Please check your email to verify your email address'));
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
                   }
-                  Navigator.of(context).pushReplacementNamed('/home');
+                  Navigator.pushAndRemoveUntil<MaterialPageRoute>(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    (route) => false,
+                  );
                 }
               })
             ],
@@ -111,6 +121,7 @@ class HomePage extends StatelessWidget {
                   loggedIn: appState.loggedIn,
                   signOut: () {
                     appState.signOut();
+                    //Navigator.pushReplacementNamed(context, '/home');
                   });
             }),
             const Divider(
@@ -124,6 +135,38 @@ class HomePage extends StatelessWidget {
             const Paragraph(
               'Join us for a day full of Firebase Workshops and Pizza!',
             ),
+            Consumer<ApplicationState>(builder: (context, appState, child) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Add from here...
+                  if (appState.attendees >= 2)
+                    Paragraph('${appState.attendees} people going')
+                  else if (appState.attendees == 1)
+                    const Paragraph('1 person going')
+                  else
+                    const Paragraph('No one going'),
+                  if (appState.loggedIn)
+                    YesNoSelection(
+                      attending: appState.attending,
+                      onSelection: (attending) =>
+                          appState.setAttending = attending,
+                    ),
+
+                  const Header('Discussion'),
+                  Visibility(
+                    visible: appState.loggedIn,
+                    child: GuestBook(
+                      addMessage: (message) async {
+                        log(message);
+                        await appState.addMessageToGuestBook(message);
+                      },
+                      message: appState.guestBookMessages,
+                    ),
+                  ),
+                ],
+              );
+            })
           ],
         ),
       );
