@@ -1,4 +1,4 @@
-# Firebase macOS requires macOS 10.13: https://firebase.google.com/docs/flutter/setup?platform=ios
+# Firebase macOS requires macOS 10.12: https://firebase.flutter.dev/docs/manual-installation/macos#macos-supported-versions
 platform :osx, '10.13'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
