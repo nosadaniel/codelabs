@@ -43,24 +43,22 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Center(
-        child: LayoutBuilder(builder: (context, constraints) {
-          return Container(
-            constraints: const BoxConstraints(
-              maxWidth: 800,
-              minWidth: 550,
-            ),
-            child: GameWidget(
-              game: game,
-              overlayBuilderMap: <String, Widget Function(BuildContext, Game)>{
-                'gameOverlay': (context, game) => GameOverlay(game),
-                'mainMenuOverlay': (context, game) => MainMenuOverlay(game),
-                'gameOverOverlay': (context, game) => GameOverOverlay(game),
-              },
-            ),
-          );
-        }),
-      ),
+      body: LayoutBuilder(builder: (context, constraints) {
+        return Container(
+          constraints: const BoxConstraints(
+            maxWidth: 800,
+            minWidth: 550,
+          ),
+          child: GameWidget(
+            game: game,
+            overlayBuilderMap: <String, Widget Function(BuildContext, Game)>{
+              'gameOverlay': (context, game) => GameOverlay(game),
+              'mainMenuOverlay': (context, game) => MainMenuOverlay(game),
+              'gameOverOverlay': (context, game) => GameOverOverlay(game),
+            },
+          ),
+        );
+      }),
     );
   }
 }
