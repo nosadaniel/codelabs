@@ -30,21 +30,15 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.audiowideTextTheme(ThemeData.dark().textTheme),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Doodle Dash'),
+      home: HomePage(),
     );
   }
 }
 
-final Game game = DoodleDash();
+class HomePage extends StatelessWidget {
+  HomePage({super.key});
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+  final Game game = DoodleDash();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
