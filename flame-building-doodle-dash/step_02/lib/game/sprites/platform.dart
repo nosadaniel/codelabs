@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 import 'dart:math';
 
 import 'package:flame/collisions.dart';
@@ -18,8 +17,6 @@ import '../doodle_dash.dart';
 /// [T] should be an enum that is used to Switch between spirtes, if necessary
 /// Many platforms only need one Sprite, so [T] will be an enum that looks
 /// something like: `enum { only }`
-
-
 
 abstract class Platform<T> extends SpriteGroupComponent<T>
     with HasGameRef<DoodleDash>, CollisionCallbacks {
@@ -44,36 +41,59 @@ abstract class Platform<T> extends SpriteGroupComponent<T>
     await add(hitbox);
 
     // More on Platforms: Set isMoving
+    final int rand = Random().nextInt(100);
+    if (rand > 80) isMoving = true;
   }
 
   // More on Platforms: Add _move method
+  void _move(double dt) {
+    if (!isMoving) return;
+
+    final double gameWidth = gameRef.size.x;
+
+    if (position.x <= 0) {
+      direction = 1;
+    } else if (position.x >= gameWidth - size.x) {
+      direction = -1;
+    }
+
+    _velocity.x = direction * speed;
+
+    position += _velocity * dt;
+  }
 
   // More on Platforms: Override update method
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _move(dt);
+  }
 }
 
 // Add platforms: Add NormalPlatformState Enum
 
 enum NormalPlatformState { only }
 
-
 // Add platforms: Add NormalPlatform class
-class NormalPlatform  extends Platform<NormalPlatformState>{
+class NormalPlatform extends Platform<NormalPlatformState> {
   NormalPlatform({super.position});
 
   final Map<String, Vector2> spriteOptions = {
-    'platform_monitor' : Vector2(115, 84),
-    'platform_phone_center' : Vector2(100, 55),
-    'platform_terminal' : Vector2(110, 83),
-    'platform_laptop' : Vector2(100, 63),
+    'platform_monitor': Vector2(115, 84),
+    'platform_phone_center': Vector2(100, 55),
+    'platform_terminal': Vector2(110, 83),
+    'platform_laptop': Vector2(100, 63),
   };
-  
+
   @override
-  Future<void>? onLoad() async{
+  Future<void>? onLoad() async {
     var randSpriteIndex = Random().nextInt(spriteOptions.length);
-    
+
     String randSprite = spriteOptions.keys.elementAt(randSpriteIndex);
-    
-    sprites = {NormalPlatformState.only: await gameRef.loadSprite('game/$randSprite.png')};
+
+    sprites = {
+      NormalPlatformState.only: await gameRef.loadSprite('game/$randSprite.png')
+    };
     current = NormalPlatformState.only;
 
     size = spriteOptions[randSprite]!;
@@ -82,12 +102,69 @@ class NormalPlatform  extends Platform<NormalPlatformState>{
 }
 
 // More on Platforms: Add BrokenPlatform State Enum
+enum BrokenPlatformState { cracked, broken }
 
 // More on Platforms: Add BrokenPlatform class
+class BrokenPlatform extends Platform<BrokenPlatformState> {
+  BrokenPlatform({super.position});
+
+  @override
+  Future<void>? onLoad() async {
+    await super.onLoad();
+
+    sprites = <BrokenPlatformState, Sprite>{
+      BrokenPlatformState.cracked:
+          await gameRef.loadSprite('game/platform_cracked_monitor.png'),
+      BrokenPlatformState.broken:
+          await gameRef.loadSprite('game/platform_monitor_broken.png'),
+    };
+    current = BrokenPlatformState.cracked;
+    size = Vector2(115, 84);
+  }
+
+  void breakPlatform() {
+    current = BrokenPlatformState.broken;
+  }
+}
 
 // More on Platforms: Add Add Spring State Enum
+enum SpringState { down, up }
 
 // More on Platforms: Add SpringBoard Platform class
+class SpringBoard extends Platform<SpringState> {
+  SpringBoard({super.position});
+  @override
+  Future<void>? onLoad() async {
+    await super.onLoad();
+
+    sprites = <SpringState, Sprite>{
+      SpringState.down:
+          await gameRef.loadSprite('game/platform_trampoline_down.png'),
+      SpringState.up:
+          await gameRef.loadSprite('game/platform_trampoline_up.png'),
+    };
+    current = SpringState.up;
+    size = Vector2(100, 45);
+  }
+
+  @override
+  void onCollisionStart(
+      Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
+
+    bool isCollidingVertically =
+        (intersectionPoints.first.y - intersectionPoints.last.y).abs() < 5;
+    if (isCollidingVertically) {
+      current = SpringState.down;
+    }
+  }
+
+  @override
+  void onCollisionEnd(PositionComponent other) {
+    super.onCollisionEnd(other);
+    current = SpringState.up;
+  }
+}
 
 // Losing the game: Add EnemyPlatformState Enum
 
