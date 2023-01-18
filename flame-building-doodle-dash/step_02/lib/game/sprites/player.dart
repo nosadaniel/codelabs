@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 
 import '../doodle_dash.dart';
 // Core gameplay: Import sprites.dart
+import 'sprites.dart';
 
 enum PlayerState {
   left,
@@ -41,13 +42,14 @@ class Player extends SpriteGroupComponent<PlayerState>
   Character character;
   double jumpSpeed;
   // Core gameplay: Add _gravity property
+  final double _gravity = 9;
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
     // Core gameplay: Add circle hitbox to Dash
-
+    await add(CircleHitbox());
     // Add a Player to the game: loadCharacterSprites
     await _loadCharacterSprites();
     // Add a Player to the game: Default Dash onLoad to center state
@@ -57,24 +59,26 @@ class Player extends SpriteGroupComponent<PlayerState>
   @override
   void update(double dt) {
     // Add a Player to the game: Add game state check
-    if(gameRef.gameManager.isIntro || gameRef.gameManager.isGameOver) return;
+    if (gameRef.gameManager.isIntro || gameRef.gameManager.isGameOver) return;
     // Add a Player to the game: Add calcualtion for Dash's horizontal velocity
     _velocity.x = _hAxisInput * jumpSpeed;
     final double dashHorizontalCenter = size.x / 2;
 
     // Add a Player to the game: Add infinite side boundaries logic
-    if(position.x < dashHorizontalCenter){
+    if (position.x < dashHorizontalCenter) {
       position.x = gameRef.size.x - dashHorizontalCenter;
     }
-    if (position.x > gameRef.size.x - (dashHorizontalCenter)){
+    if (position.x > gameRef.size.x - (dashHorizontalCenter)) {
       position.x = dashHorizontalCenter;
     }
 
     // Core gameplay: Add gravity
-    position += _velocity * dt;
+    _velocity.y += _gravity;
 
     // Add a Player to the game: Calculate Dash's current position based on
     // her velocity over elapsed time since last update cycle
+    position += _velocity * dt;
+
     super.update(dt);
   }
 
@@ -83,19 +87,34 @@ class Player extends SpriteGroupComponent<PlayerState>
     _hAxisInput = 0;
 
     // Add a Player to the game: Add keypress logic
-    if(keysPressed.contains(LogicalKeyboardKey.arrowLeft)){
+    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft)) {
       moveLeft();
     }
 
-    if(keysPressed.contains(LogicalKeyboardKey.arrowRight)){
+    if (keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
       moveRight();
     }
 
-    if(keysPressed.contains(LogicalKeyboardKey.arrowUp)){
-      //jump();
+    if (keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
+      jump();
     }
 
     return true;
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
+    bool isCollidingVertically =
+        (intersectionPoints.first.y - intersectionPoints.last.y).abs() < 5;
+
+    if (isMovingDown && isCollidingVertically) {
+      current = PlayerState.center;
+      if (other is NormalPlatform) {
+        jump();
+        return;
+      }
+    }
   }
 
   void moveLeft() {
@@ -104,7 +123,6 @@ class Player extends SpriteGroupComponent<PlayerState>
     // Add a Player to the game: Add logic for moving left
     current = PlayerState.left;
     _hAxisInput += movingLeftInput;
-
   }
 
   void moveRight() {
@@ -113,7 +131,6 @@ class Player extends SpriteGroupComponent<PlayerState>
     // Add a Player to the game: Add logic for moving right
     current = PlayerState.right;
     _hAxisInput += movingRightInput;
-
   }
 
   void resetDirection() {
@@ -129,6 +146,9 @@ class Player extends SpriteGroupComponent<PlayerState>
   // Core gameplay: Override onCollision callback
 
   // Core gameplay: Add a jump method
+  void jump({double? specialJumpSpeed}) {
+    _velocity.y = specialJumpSpeed != null ? -specialJumpSpeed : -jumpSpeed;
+  }
 
   void _removePowerupAfterTime(int ms) {
     Future.delayed(Duration(milliseconds: ms), () {
