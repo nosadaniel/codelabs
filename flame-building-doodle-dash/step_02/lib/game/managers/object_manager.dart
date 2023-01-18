@@ -50,6 +50,7 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
       //Losing the game: add call to _maybeAddEnemy()
       _maybeAddEnemy();
       //Powerups: add call to _maybeAddPowerup()
+      _maybeAddPowerUp();
     }
     super.update(dt);
   }
@@ -104,6 +105,12 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
         break;
       case 2:
         enableSpecialty('broken');
+        break;
+      case 3:
+        enableSpecialty('noogler');
+        break;
+      case 4:
+        enableSpecialty('rocket');
         break;
       case 5:
         enableSpecialty('enemy');
@@ -172,6 +179,8 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
     return NormalPlatform(position: position);
   }
 
+  // Losing the game: Add enemy code
+
   final List<EnemyPlatform> _enemies = [];
 
   void _maybeAddEnemy() {
@@ -198,7 +207,37 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
     }
   }
 
-  // Losing the game: Add enemy code
-
   // Powerups: Add Power-Up code
+  final List<PowerUp> _powerUps = [];
+
+  void _maybeAddPowerUp() {
+    if (specialPlatforms['noogler'] == true &&
+        probGen.generateWithProbability(20)) {
+      var nooglerHat = NooglerHat(
+        position: Vector2(_generateNextX(75), _generateNextY()),
+      );
+      add(nooglerHat);
+      _powerUps.add(nooglerHat);
+    } else if (specialPlatforms['rocket'] == true &&
+        probGen.generateWithProbability(15)) {
+      var rocket = Rocket(
+        position: Vector2(_generateNextX(50), _generateNextY()),
+      );
+      add(rocket);
+      _powerUps.add(rocket);
+    }
+    _cleanUpPowerUps();
+  }
+
+  void _cleanUpPowerUps() {
+    final screenBottom = gameRef.player.position.y +
+        (gameRef.size.x / 2) +
+        gameRef.screenBufferSpace;
+    while (_powerUps.isNotEmpty && _powerUps.first.position.y > screenBottom) {
+      if (_powerUps.first.parent != null) {
+        remove(_powerUps.first);
+      }
+      _powerUps.removeAt(0);
+    }
+  }
 }
