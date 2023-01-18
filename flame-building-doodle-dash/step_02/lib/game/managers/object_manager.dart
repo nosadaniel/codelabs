@@ -48,6 +48,7 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
 
       _cleanupPlatforms();
       //Losing the game: add call to _maybeAddEnemy()
+      _maybeAddEnemy();
       //Powerups: add call to _maybeAddPowerup()
     }
     super.update(dt);
@@ -103,6 +104,9 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
         break;
       case 2:
         enableSpecialty('broken');
+        break;
+      case 5:
+        enableSpecialty('enemy');
         break;
     }
   }
@@ -166,6 +170,32 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
       return BrokenPlatform(position: position);
     }
     return NormalPlatform(position: position);
+  }
+
+  final List<EnemyPlatform> _enemies = [];
+
+  void _maybeAddEnemy() {
+    if (specialPlatforms['enemy'] != true) {
+      return;
+    }
+    if (probGen.generateWithProbability(20)) {
+      var enemy = EnemyPlatform(
+        position: Vector2(_generateNextX(100), _generateNextY()),
+      );
+      add(enemy);
+      _enemies.add(enemy);
+      _cleanupEnemies();
+    }
+  }
+
+  void _cleanupEnemies() {
+    final screenBottom = gameRef.player.position.y +
+        (gameRef.size.x / 2) +
+        gameRef.screenBufferSpace;
+    while (_enemies.isNotEmpty && _enemies.first.position.y > screenBottom) {
+      remove(_enemies.first);
+      _enemies.removeAt(0);
+    }
   }
 
   // Losing the game: Add enemy code
